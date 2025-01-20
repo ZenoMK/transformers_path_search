@@ -138,7 +138,6 @@ def validate_paths(val_paths, model, tokenizer, device, DAG, verbose=False):
             if not DAG.has_edge(int(edge[0]), int(edge[1])):
                 if verbose:
                     print(f"❌ Pre-check: Edge {edge} not found in DAG.")
-                    0 / 0
                 counts["hallucination"] += 1
                 has_hallucination = True
 
