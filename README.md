@@ -2,6 +2,8 @@
 
 This repository contains a project to train Transformers on graph-based data, testing the model's ability to learn paths and perform path searches between source and target nodes. The project leverages a Transformer-based architecture inspired by Sebastian Raschka's book series.
 
+<img src="https://github.com/rmaestre/transformers_path_search/blob/main/img/run_example.png"></img>
+
 ## Overview
 
 The project includes the following main functionalities:
@@ -81,14 +83,6 @@ python run_validation.py \
     --dag_file data/DAG.gpickle \
     --verbose
 ```
-
----
-
-## Example Output
-
-Below is a sample terminal output during validation:
-
-![Validation Example](example_output.png)
 
 ---
 
