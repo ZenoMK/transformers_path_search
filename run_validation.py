@@ -3,29 +3,9 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pickle
 import tiktoken
-import json
 
 import torch
-from utils_final import (
-    GPTModel,
-    generate_and_print_sample,
-    create_tuples,
-)
-
-
-def load_config(config_file):
-    """
-    Load GPT configuration from a JSON file.
-
-    Args:
-        config_file (str): Path to the configuration file.
-
-    Returns:
-        dict: GPT configuration.
-    """
-    with open(config_file, "r") as f:
-        config = json.load(f)
-    return config
+from utils_final import GPTModel, generate_and_print_sample, create_tuples, load_config
 
 
 def load_model_and_data(
