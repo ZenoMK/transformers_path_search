@@ -19,14 +19,15 @@ def generate_and_save_dag(args):
     G = nx.gnp_random_graph(args.nodes, args.probability, directed=True)
 
     # Convert the graph to a weighted DAG (retain only edges where u < v)
-    # Weights can be used in future for mny tests
     DAG = nx.DiGraph(
-        [(u, v, {"weight": random.randint(-10, 10)}) for (u, v) in G.edges() if u < v]
+        [(u, v, {"weight": random.uniform(0.1, 1.0)}) for (u, v) in G.edges() if u < v]
     )
 
     # Visualize the DAG if verbose mode is enabled
     if args.verbose:
-        nx.draw(DAG, with_labels=True)
+        pos = nx.spring_layout(DAG)
+        nx.draw(DAG, pos, with_labels=True, node_color="lightblue", edge_color="gray")
+        plt.title("Generated DAG")
         plt.show()
 
     # Ensure the generated graph is a DAG
@@ -51,19 +52,21 @@ def generate_and_save_dag(args):
                     nx.all_simple_paths(DAG, source=source_node, target=target_node)
                 )
                 if len(all_paths) > 0:
-                    k = min(
-                        20, len(all_paths)
-                    )  # Min limit to 20 paths per source-target pair, this pram cames from the reference paper,
-                    # it can be changed to any number.
-                    for path in random.sample(all_paths, k):
-                        if len(path) > 2:
-                            if args.verbose:
-                                formatted_path = " ".join(map(str, path))
-                                print(f"Path: {formatted_path}")
-                            path = [path[0], path[-1]] + path
-                            if len(path) > max_length:
-                                max_length = len(path)
-                            paths.append(path)
+                    # Ensure diverse path lengths
+                    direct_paths = [p for p in all_paths if len(p) == 2]
+                    longer_paths = [p for p in all_paths if len(p) > 2]
+                    sampled_direct = random.sample(
+                        direct_paths, min(10, len(direct_paths))
+                    )
+                    sampled_longer = random.sample(
+                        longer_paths, min(10, len(longer_paths))
+                    )
+
+                    for path in sampled_direct + sampled_longer:
+                        formatted_path = [path[0], path[-1]] + path
+                        if len(formatted_path) > max_length:
+                            max_length = len(formatted_path)
+                        paths.append(formatted_path)
 
     # Shuffle the paths to randomize the order
     random.shuffle(paths)
@@ -77,8 +80,8 @@ def generate_and_save_dag(args):
     # Save training paths to the specified file
     train_paths_filled = ""
     for path in train_paths:
-        path_filled = path + ["\n"]
-        train_paths_filled += " ".join(map(str, path_filled))
+        path_filled = f"{path[0]} {path[1]} " + " ".join(map(str, path[2:])) + " \n"
+        train_paths_filled += path_filled
 
     with open(args.train_file, "w", encoding="utf8") as file:
         file.write(train_paths_filled)
@@ -86,8 +89,8 @@ def generate_and_save_dag(args):
     # Save validation paths to the specified file
     val_paths_filled = ""
     for path in val_paths:
-        path_filled = path + ["\n"]
-        val_paths_filled += " ".join(map(str, path_filled))
+        path_filled = f"{path[0]} {path[1]} " + " ".join(map(str, path[2:])) + " \n"
+        val_paths_filled += path_filled
 
     with open(args.val_file, "w", encoding="utf8") as file:
         file.write(val_paths_filled)
@@ -166,4 +169,4 @@ if __name__ == "__main__":
     main()
 
 # Example run:
-# python run_data_generation.py --nodes 100 --probability 0.1 --ratio 0.9 --train_file data/train.txt --val_file data/val.txt --dag_file data/dag.gpickle --seed 123 --verbose
+# python dag_path_generation.py --nodes 100 --probability 0.1 --ratio 0.8 --train_file data/train.txt --val_file data/val.txt --dag_file data/dag.gpickle --seed 123 --verbose
