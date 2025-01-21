@@ -1,5 +1,6 @@
 import torch
 import tiktoken
+import json
 import numpy as np
 from itertools import chain
 from torch.utils.data import Dataset, DataLoader
@@ -198,6 +199,83 @@ class MultiHeadAttention(Module):
         context_vec = self.out_proj(context_vec)
         self.context_vector = context_vec
         return context_vec
+
+
+class AttentionVisualizer:
+    """
+    Utility class to visualize attention weights from a Transformer model.
+    """
+
+    def __init__(self, model, tokenizer):
+        """
+        Initialize the visualizer with a model and tokenizer.
+
+        Args:
+            model: The Transformer model.
+            tokenizer: The tokenizer used for encoding input.
+        """
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def infer_and_visualize_attention(
+        self, input_text, head=0, layer=0, save_path="attention_weights.png"
+    ):
+        """
+        Perform inference and visualize attention weights for a given input text.
+
+        Args:
+            input_text (str): The input text to analyze.
+            head (int): The attention head to visualize.
+            layer (int): The Transformer layer to analyze.
+            save_path (str): Path to save the attention weights plot.
+        """
+        # Encode the input text
+        encoded_input = self.tokenizer.encode(input_text)
+        encoded_input_tensor = torch.tensor(encoded_input).unsqueeze(0)
+        print("Next tokens are calculated from the following input:", input_text)
+
+        # Decode tokens for labels
+        labels = [self.tokenizer.decode([_token]) for _token in encoded_input]
+        print("Labels:", labels)
+
+        # Set model to evaluation mode and run inference
+        self.model.eval()
+        self.model(encoded_input_tensor)
+
+        # Extract attention weights
+        attention_weights = self.model.trf_blocks[layer].att.atten_weights
+
+        # Visualize attention weights for the specified head
+        attention_matrix = sum(attention_weights[head]).detach().numpy()
+        self._plot_attention(attention_matrix, labels, head, save_path)
+
+    def _plot_attention(self, attention_matrix, labels, head, save_path):
+        """
+        Plot and save the attention weights as a heatmap.
+
+        Args:
+            attention_matrix (numpy.ndarray): The attention weights matrix.
+            labels (list): Token labels for x and y axes.
+            head (int): The attention head being visualized.
+            save_path (str): Path to save the plot.
+        """
+        plt.matshow(attention_matrix, cmap="Blues", interpolation="nearest")
+
+        # Add labels to axes
+        plt.xticks(range(len(labels)), labels, rotation=90)
+        plt.tick_params(
+            axis="x", bottom=True, top=True, labelbottom=True, labeltop=True
+        )
+        plt.yticks(range(len(labels)), labels)
+
+        # Add colorbar and title
+        plt.colorbar()
+        plt.title(f"Causal-Attention weights for head {head}")
+
+        # Show and save plot
+        plt.show()
+        plt.savefig(save_path)
+        print(f"Attention weights saved to {save_path}")
 
 
 def train_model_simple(
@@ -437,3 +515,18 @@ def plot_losses(epochs_seen, tokens_seen, train_losses, val_losses):
     ax2.set_xlabel("Tokens seen")
     fig.tight_layout()
     plt.show()
+
+
+def load_config(config_file):
+    """
+    Load GPT configuration from a JSON file.
+
+    Args:
+        config_file (str): Path to the configuration file.
+
+    Returns:
+        dict: GPT configuration.
+    """
+    with open(config_file, "r") as f:
+        config = json.load(f)
+    return config
