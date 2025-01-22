@@ -8,15 +8,40 @@ This repository contains a project to train Transformers on graph-based data, te
 
 The project includes the following main functionalities:
 
-1. **Data Generation:**
-   - Generates random Directed Acyclic Graphs (DAGs).
-   - Creates train and validation datasets with paths between nodes.
 
-2. **Training:**
-   - Trains a Transformer model on the generated data to predict paths within a graph.
+### 1. **Python Debugger: Current File**
+   - **Description**: Runs the currently open Python file in the integrated terminal.
+   - **Execution**:
+     ```bash
+     python ${file}
+     ```
 
-3. **Validation:**
-   - Validates the trained model's ability to predict paths, checking for accuracy and errors such as hallucinations or unreachable nodes.
+---
+
+### 2. **Python Debugger: Run Validation**
+   - **Description**: Runs the validation script to evaluate the model's performance using specified configuration and data files.
+   - **Execution**:
+     ```bash
+     python run_validation.py --config config/gpt_config_multi.json --model_file models/gpt_config_multi_model.pth --train_file data/train.txt --val_file data/val.txt --dag_file data/dag.gpickle --verbose
+     ```
+
+---
+
+### 3. **Python Debugger: Visualize Attention**
+   - **Description**: Visualizes attention weights from the Transformer model for a given input sequence.
+   - **Execution**:
+     ```bash
+     python visualize_attention.py --config_file config/gpt_config_multi.json --model_file models/gpt_config_multi_model.pth --input_text "177 165 177 149 57 120 112 181 134 165" --head 0 1 2 --layer 0 1 --save_path img/attention_weights.png --verbose --use_power_scale
+     ```
+
+---
+
+### 4. **Python Debugger: Visualize Next Token**
+   - **Description**: Visualizes the next token probabilities predicted by the model for a given input sequence.
+   - **Execution**:
+     ```bash
+     python visualize_next_token.py --config_file config/gpt_config_multi.json --model_file models/gpt_config_multi_model.pth --input_text "65 177 149 57 120" --save_path img/next_token_probabilities.png --verbose
+     ```
 
 ---
 
