@@ -98,7 +98,6 @@ python run_validation.py \
 ## Acknowledgments
 
 - Sebastian Raschka's books and resources for Transformer implementation.
-- PyTorch for the deep learning framework.
-- NetworkX for graph generation and manipulation.
+- Siwei Wang, Yifei Shen, Shi Feng, Haoran Sun, Shang-Hua Teng, Wei Chen. ALPINE: Unveiling the Planning Capability of Autoregressive Learning in Language .
 
 Feel free to explore and contribute to this project!
