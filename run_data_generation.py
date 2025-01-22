@@ -23,11 +23,38 @@ def generate_and_save_dag(args):
         [(u, v, {"weight": random.uniform(0.1, 1.0)}) for (u, v) in G.edges() if u < v]
     )
 
+    # Assign labels to nodes based on degree (higher-degree nodes get higher labels)
+    node_degrees = dict(DAG.degree())
+    sorted_nodes = sorted(node_degrees, key=node_degrees.get, reverse=True)
+    node_labels = {node: label for label, node in enumerate(sorted_nodes, start=1)}
+
+    # Shuffle the labels if the `shuffle_labels` argument is provided
+    if args.shuffle_labels:
+        labels = list(node_labels.values())
+        random.shuffle(labels)
+        shuffled_labels = {node: labels[i] for i, node in enumerate(sorted_nodes)}
+        node_labels = shuffled_labels
+
+    # Set the node labels as attributes in the DAG
+    nx.set_node_attributes(DAG, node_labels, "label")
+
+    # Reweight edges to favor connections to high-label nodes
+    for u, v, data in DAG.edges(data=True):
+        data["weight"] *= node_labels[v] / (node_labels[u] + node_labels[v])
+
     # Visualize the DAG if verbose mode is enabled
     if args.verbose:
         pos = nx.spring_layout(DAG)
-        nx.draw(DAG, pos, with_labels=True, node_color="lightblue", edge_color="gray")
-        plt.title("Generated DAG")
+        node_colors = [node_labels[node] for node in DAG.nodes()]
+        nx.draw(
+            DAG,
+            pos,
+            with_labels=True,
+            node_color=node_colors,
+            cmap=plt.cm.Blues,
+            edge_color="gray",
+        )
+        plt.title("Generated DAG with Biased Labels")
         plt.show()
 
     # Ensure the generated graph is a DAG
@@ -67,6 +94,7 @@ def generate_and_save_dag(args):
                         if len(formatted_path) > max_length:
                             max_length = len(formatted_path)
                         paths.append(formatted_path)
+                        print(formatted_path)
 
     # Shuffle the paths to randomize the order
     random.shuffle(paths)
@@ -159,6 +187,11 @@ def main():
         action="store_true",
         help="Enable verbose mode for detailed output.",
     )
+    parser.add_argument(
+        "--shuffle_labels",
+        action="store_true",
+        help="Shuffle node labels after assignment.",
+    )
 
     # Parse arguments and call the DAG generation function
     args = parser.parse_args()
@@ -167,6 +200,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# Example run:
-# python dag_path_generation.py --nodes 100 --probability 0.1 --ratio 0.8 --train_file data/train.txt --val_file data/val.txt --dag_file data/dag.gpickle --seed 123 --verbose
