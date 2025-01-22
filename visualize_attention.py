@@ -36,16 +36,18 @@ def main():
         help="Input text to analyze. Default is '19 94 19 27 34 46 58 65 67 82 87 94'.",
     )
     parser.add_argument(
-        "--head",
+        "--heads",
         type=int,
-        default=0,
-        help="Attention head to visualize. Default is 0.",
+        nargs="+",
+        default=[0],
+        help="List of attention heads to visualize. Default is [0].",
     )
     parser.add_argument(
-        "--layer",
+        "--layers",
         type=int,
-        default=0,
-        help="Transformer layer to visualize. Default is 0.",
+        nargs="+",
+        default=[0],
+        help="List of transformer layers to visualize. Default is [0].",
     )
     parser.add_argument(
         "--save_path",
@@ -103,23 +105,18 @@ def main():
 
     # Initialize the AttentionVisualizer
     visualizer = AttentionVisualizer(model, tokenizer)
-
-    # Visualize attention weights
     visualizer.infer_and_visualize_attention(
         input_text=args.input_text,
-        head=args.head,
-        layer=args.layer,
-        save_path=args.save_path,
+        heads=args.heads,
+        layers=args.layers,
+        save_path=f"{args.save_path}_attention.png",
         use_power_scale=args.use_power_scale,
         gamma=args.gamma,
     )
-
-    if args.verbose:
-        print(f"Attention visualization saved to {args.save_path}.")
 
 
 if __name__ == "__main__":
     main()
 
 # Example run:
-# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --head 0 --layer 0 --save_path img/attention_weights.png --verbose
+# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --heads 0 1 2 --layers 0 1 --save_path img/attention_weights.png --verbose

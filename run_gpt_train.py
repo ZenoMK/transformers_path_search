@@ -80,10 +80,11 @@ def train_and_save_model(
     val_loader,
     device,
     num_epochs,
+    config_file,
     verbose=False,
 ):
     """
-    Train the GPT model and save it to disk.
+    Train the GPT model and save it to disk with the config name.
 
     Args:
         GPT_CONFIG (dict): Model configuration.
@@ -92,6 +93,7 @@ def train_and_save_model(
         val_loader: DataLoader for validation data.
         device: Device to run the model on (CPU or GPU).
         num_epochs (int): Number of training epochs.
+        config_file (str): Path to the GPT configuration file.
         verbose (bool): Enable verbose output.
     """
     # Initialize the GPT model and move it to the specified device
@@ -121,11 +123,15 @@ def train_and_save_model(
         start_context="7 2 7",
     )
 
-    # Save the trained model to disk
-    torch.save(model.state_dict(), "models/path_finder.model")
+    # Extract the name of the config file (without path and extension)
+    config_name = config_file.split("/")[-1].replace(".json", "")
+
+    # Save the trained model to disk, including the config name in the filename
+    model_save_path = f"models/{config_name}_model.pth"
+    torch.save(model.state_dict(), model_save_path)
 
     if verbose:
-        print("Training completed. Model saved to 'models/path_finder.model'.")
+        print(f"Training completed. Model saved to '{model_save_path}'.")
 
     # Plot and save the training and validation loss curves
     epochs_tensor = torch.linspace(0, num_epochs, len(train_losses))
@@ -196,6 +202,7 @@ def main():
             val_loader,
             device,
             num_epochs=args.epochs,
+            config_file=args.config_file,
             verbose=args.verbose,
         )
     else:
