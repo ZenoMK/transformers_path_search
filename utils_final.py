@@ -285,7 +285,7 @@ class AttentionVisualizer:
             gamma (float): Gamma value for power normalization.
         """
         # Select colormap and normalization
-        cmap = "plasma"
+        cmap = "Blues"
         norm = (
             mcolors.PowerNorm(gamma=gamma, vmin=0, vmax=1)
             if use_power_scale
@@ -375,6 +375,7 @@ def generate_and_print_sample(
     plot_best_tokens_prob=False,
     print_output=True,
     proba_threshold=0.001,
+    save_path=False,
 ):
     model.eval()
     context_size = model.pos_emb.weight.shape[0]
@@ -388,6 +389,7 @@ def generate_and_print_sample(
             tokenizer=tokenizer,
             plot_best_tokens_prob=plot_best_tokens_prob,
             proba_threshold=proba_threshold,
+            save_path=save_path,
         )
         decoded_text = token_ids_to_text(token_ids, tokenizer)
         if print_output:
@@ -470,6 +472,7 @@ def generate_text_simple(
     tokenizer,
     plot_best_tokens_prob=False,
     proba_threshold=0.001,
+    save_path=False,
 ):
     model.eval()
     for _next_token_ahead in range(max_new_tokens):
@@ -486,6 +489,12 @@ def generate_text_simple(
         idx = torch.cat((idx, idx_next), dim=1)
         # Debug info, plot best tokens probability, when
         # a threshold is set by hand.
+        if plot_best_tokens_prob and max_new_tokens != 1:
+            print(
+                "Error: max_new_tokens must be set to 1 to visualize next token prediction."
+            )
+            plot_best_tokens_prob = False
+
         if plot_best_tokens_prob:
             # get tokens over a propability threshold
             best_tokens = torch.where(probas > proba_threshold)[1]
@@ -504,9 +513,21 @@ def generate_text_simple(
             idx = np.argsort(best_probs.numpy())[::-1]
             best_probs = best_probs[idx.copy()]
             labels = [labels[i] for i in idx]
+            fig1 = plt.gcf()
             plt.bar(labels, best_probs)
             plt.xticks(rotation=45)
+            # Enhance the plot with better labels and title
+            plt.title("Next Token Prediction Probability Distribution", fontsize=16)
+            plt.xlabel("Tokens", fontsize=14)
+            plt.ylabel("Probability", fontsize=14)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
             plt.show()
+            # save plot if save_path is set
+            if save_path:
+                # Show and save plot
+                fig1.savefig(save_path)
+                print(f"Attention weights saved to {save_path}")
     return idx
 
 
