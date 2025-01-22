@@ -61,6 +61,17 @@ def main():
         help="Device to run the model on. Options are 'cpu' or 'cuda'. Default is 'cpu'.",
     )
     parser.add_argument(
+        "--use_power_scale",
+        action="store_true",
+        help="Enable power scale normalization for the attention visualization.",
+    )
+    parser.add_argument(
+        "--gamma",
+        type=float,
+        default=0.5,
+        help="Gamma value for power scale normalization. Default is 0.5.",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose mode for detailed output.",
@@ -99,6 +110,8 @@ def main():
         head=args.head,
         layer=args.layer,
         save_path=args.save_path,
+        use_power_scale=args.use_power_scale,
+        gamma=args.gamma,
     )
 
     if args.verbose:
@@ -109,4 +122,4 @@ if __name__ == "__main__":
     main()
 
 # Example run:
-# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --head 0 --layer 0 --save_path attention_weights.png --verbose
+# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --head 0 --layer 0 --save_path img/attention_weights.png --verbose

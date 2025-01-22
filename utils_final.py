@@ -201,6 +201,11 @@ class MultiHeadAttention(Module):
         return context_vec
 
 
+import matplotlib.pyplot as plt
+import torch
+import matplotlib.colors as mcolors
+
+
 class AttentionVisualizer:
     """
     Utility class to visualize attention weights from a Transformer model.
@@ -218,7 +223,13 @@ class AttentionVisualizer:
         self.tokenizer = tokenizer
 
     def infer_and_visualize_attention(
-        self, input_text, head=0, layer=0, save_path="attention_weights.png"
+        self,
+        input_text,
+        head=0,
+        layer=0,
+        save_path="attention_weights.png",
+        use_power_scale=False,
+        gamma=0.5,
     ):
         """
         Perform inference and visualize attention weights for a given input text.
@@ -228,6 +239,8 @@ class AttentionVisualizer:
             head (int): The attention head to visualize.
             layer (int): The Transformer layer to analyze.
             save_path (str): Path to save the attention weights plot.
+            use_power_scale (bool): Whether to apply power scale normalization.
+            gamma (float): The gamma value for power normalization if use_power_scale is True.
         """
         # Encode the input text
         encoded_input = self.tokenizer.encode(input_text)
@@ -247,9 +260,19 @@ class AttentionVisualizer:
 
         # Visualize attention weights for the specified head
         attention_matrix = sum(attention_weights[head]).detach().numpy()
-        self._plot_attention(attention_matrix, labels, head, save_path)
+        self._plot_attention(
+            attention_matrix, labels, head, save_path, use_power_scale, gamma
+        )
 
-    def _plot_attention(self, attention_matrix, labels, head, save_path):
+    def _plot_attention(
+        self,
+        attention_matrix,
+        labels,
+        head,
+        save_path,
+        use_power_scale,
+        gamma,
+    ):
         """
         Plot and save the attention weights as a heatmap.
 
@@ -258,8 +281,19 @@ class AttentionVisualizer:
             labels (list): Token labels for x and y axes.
             head (int): The attention head being visualized.
             save_path (str): Path to save the plot.
+            use_power_scale (bool): Whether to apply power scale normalization.
+            gamma (float): Gamma value for power normalization.
         """
-        plt.matshow(attention_matrix, cmap="Blues", interpolation="nearest")
+        # Select colormap and normalization
+        cmap = "plasma"
+        norm = (
+            mcolors.PowerNorm(gamma=gamma, vmin=0, vmax=1)
+            if use_power_scale
+            else mcolors.Normalize(vmin=0, vmax=1)
+        )
+
+        # Plot attention weights
+        plt.matshow(attention_matrix, cmap=cmap, norm=norm)
 
         # Add labels to axes
         plt.xticks(range(len(labels)), labels, rotation=90)
@@ -270,7 +304,10 @@ class AttentionVisualizer:
 
         # Add colorbar and title
         plt.colorbar()
-        plt.title(f"Causal-Attention weights for head {head}")
+        title = f"Causal-Attention weights for head {head}"
+        if use_power_scale:
+            title += f" (PowerNorm, gamma={gamma})"
+        plt.title(title)
 
         # Show and save plot
         plt.show()
