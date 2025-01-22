@@ -34,6 +34,14 @@ def generate_and_save_dag(args):
         random.shuffle(labels)
         shuffled_labels = {node: labels[i] for i, node in enumerate(sorted_nodes)}
         node_labels = shuffled_labels
+        # shuffle also the node ids
+        shuffled_nodes = sorted(node_labels, key=node_labels.get)
+        DAG = nx.relabel_nodes(
+            DAG, {node: shuffled_nodes[i] for i, node in enumerate(sorted_nodes)}
+        )
+        node_labels = {
+            node: label for label, node in enumerate(shuffled_nodes, start=1)
+        }
 
     # Set the node labels as attributes in the DAG
     nx.set_node_attributes(DAG, node_labels, "label")
