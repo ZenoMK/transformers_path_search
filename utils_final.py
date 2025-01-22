@@ -259,7 +259,7 @@ class AttentionVisualizer:
         attention_weights = self.model.trf_blocks[layer].att.atten_weights
 
         # Visualize attention weights for the specified head
-        attention_matrix = sum(attention_weights[head]).detach().numpy()
+        attention_matrix = attention_weights[0][head].detach().numpy()
         self._plot_attention(
             attention_matrix, labels, head, save_path, use_power_scale, gamma
         )
@@ -310,8 +310,8 @@ class AttentionVisualizer:
         plt.title(title)
 
         # Show and save plot
-        plt.show()
         plt.savefig(save_path)
+        plt.show()
         print(f"Attention weights saved to {save_path}")
 
 
@@ -522,12 +522,12 @@ def generate_text_simple(
             plt.ylabel("Probability", fontsize=14)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            plt.show()
             # save plot if save_path is set
             if save_path:
                 # Show and save plot
                 fig1.savefig(save_path)
                 print(f"Attention weights saved to {save_path}")
+            plt.show()
     return idx
 
 

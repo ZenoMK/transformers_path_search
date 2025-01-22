@@ -114,9 +114,6 @@ def main():
         gamma=args.gamma,
     )
 
-    if args.verbose:
-        print(f"Attention visualization saved to {args.save_path}.")
-
 
 if __name__ == "__main__":
     main()
