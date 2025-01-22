@@ -94,8 +94,7 @@ def validate_paths(val_paths, model, tokenizer, device, DAG, verbose=False):
             tokenizer,
             device,
             path_head,
-            max_new_tokens=40,
-            plot_best_tokens_prob=False,
+            max_new_tokens=60,
             print_output=False,
             proba_threshold=0.001,
         )
