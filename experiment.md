@@ -39,6 +39,15 @@ The experiment models planning as a graph path-finding task, where the objective
 
 ---
 
+## Attention Visualization
+
+| Configuration                | Image Path                                  |
+|------------------------------|---------------------------------------------|
+| GPT Config Multi Attention   | ![](img/gpt_config_multi_attention.png)    |
+| GPT Config Single Attention  | ![](img/gpt_config_single_attention.png)   |
+
+---
+
 ## Attention Mechanism Analysis
 
 ### Single Attention Head
