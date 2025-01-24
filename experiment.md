@@ -2,11 +2,17 @@
 
 ## Introduction
 
-Planning is a fundamental aspect of both human cognition and the functionality of large language models (LLMs). The study "[ALPINE: Unveiling the Planning Capability of Autoregressive Learning in Language Models](https://arxiv.org/abs/2405.09220)" investigates how Transformer-based LLMs develop planning abilities through next-word prediction mechanisms. This experiment demonstrates how Transformers can effectively capture both short and long-range relationships, focusing on source and target nodes in graph-based path-finding tasks.
+Planning is a critical element of human cognition and a fundamental functionality of large language models (LLMs). The study ["ALPINE: Unveiling the Planning Capability of Autoregressive Learning in Language Models"](https://arxiv.org/abs/2405.09220) investigates how Transformer-based LLMs develop planning abilities through next-word prediction. This experiment highlights the capability of Transformers to capture short- and long-range relationships in graph-based path-finding tasks, focusing on the interaction between source and target nodes.
+
+---
 
 ## Experiment Overview
 
-The experiment models planning as a graph path-finding task, where the objective is to generate a valid path from a source node to a target node. It evaluates the Transformer's ability to capture both local and global context, focus on critical nodes, and handle relationships inherent to graph-based structures.
+The experiment models planning as a graph path-finding task. The objective is to generate a valid path from a source node to a target node while evaluating the Transformer's ability to:
+
+1. Capture both local and global context.
+2. Focus on critical nodes.
+3. Handle the inherent relationships in graph-based structures.
 
 ---
 
@@ -41,69 +47,66 @@ The experiment models planning as a graph path-finding task, where the objective
 
 ## Attention Visualization
 
-| Configuration                | Image Path                                  |
-|------------------------------|---------------------------------------------|
-| GPT Config Multi Attention   | ![](img/gpt_config_multi_attention.png)    |
-| GPT Config Single Attention  | ![](img/gpt_config_attention.png)   |
+| Configuration                | Causal Attention Visualization                   |
+|------------------------------|--------------------------------------------------|
+| GPT Config Single Attention  | ![](img/exp_1head_1layer_attention.png)         |
+| GPT Config Multi Attention   | ![](img/exp_3head_2layer_attention.png)         |
 
----
+The analysis of attention mechanisms provides critical insights into Transformer behavior:
 
-## Attention Mechanism Analysis
+### Single Attention Head and Single Layer
 
-### Single Attention Head
-Observations:
-- **Uniform Focus**:
-  - The single head exhibits consistently high attention weights for previous, source, and target tokens.
-  - This uniform distribution limits the model's ability to specialize in particular aspects of the graph traversal task.
-- **Limited Differentiation**:
-  - The attention map shows no clear preference for distinguishing between source and target nodes.
-  - As a result, the model may struggle with complex relationships in graph structures.
-- **Smoother Attention Distribution**:
-  - The attention weights become smoother as token generation progresses, helping the model maintain coherence. However, this smoothness does not fully address accuracy issues caused by the lack of head specialization.
+- **Mechanism**: This configuration mixes information from the source node, target node, and preceding node, ensuring that the correct path is constructed.
+- **Limitation**: As the path is generated, attention on the source node diminishes, reducing its influence on path completion. This suggests that a single attention head and layer struggle to maintain long-term dependencies effectively.
 
-### Multiple Attention Heads
-Observations:
+### Multiple Attention Heads and Layers
+
 - **Layer Specialization**:
-  - Different attention heads across layers demonstrate clear roles. For example, some heads focus specifically on source and target nodes, while others capture broader contextual relationships.
-- **Diverse Relationships**:
-  - Multiple heads allow the model to distinguish between short and long-range dependencies effectively, enabling better performance on graph-based tasks.
-- **Smoother Attention Distribution**:
-  - Like the single-head configuration, attention distributions become smoother over time. However, this smoothness is complemented by the specialization of individual heads, leading to more accurate path generation.
+  - **First Layer**: Broadly focuses on multiple nodes, capturing relationships within the graph's structure.
+  - **Second Layer**: Specializes in focusing on the target node, integrating critical information to guide path generation.
+- **Outcome**: The specialized roles of layers result in significantly higher accuracy, with each layer contributing distinct but complementary information.
 
 ---
 
-## Negative Aspects
+## Next Token Probability Generation
 
-While the experiment demonstrates the strengths of Transformers in graph-based path-finding, several challenges remain:
-- **Hallucinations**:
-  - Both single and multi-head models occasionally generate edges that do not exist in the graph, leading to invalid paths.
-- **Unreachable Paths**:
-  - Certain paths remain unreachable, particularly in more complex graph topologies, due to incomplete or erroneous attention assignments.
-- **Testing Limitations**:
-  - The current experiment focuses on a limited set of Directed Acyclic Graph (DAG) topologies. Expanding the test set to include more diverse and complex DAG structures is crucial for evaluating the generalizability of the model.
+| Configuration                | Next Token Probability Distribution              |
+|------------------------------|--------------------------------------------------|
+| GPT Config Single Attention  | ![](img/exp_1head_1layer_next_token.png)         |
+| GPT Config Multi Attention   | ![](img/exp_3head_2layer_next_token.png)         |
+
+The attention mechanism ensures that the generation of the most probable token aligns closely with valid paths, particularly in the multi-head configuration.
 
 ---
 
-## Key Observations from Attention Visualization
+## Challenges and Limitations
 
-| **Aspect**                 | **Single Attention Head**                         | **Multiple Attention Heads**                           |
-|----------------------------|--------------------------------------------------|-------------------------------------------------------|
-| **Focus on Source/Target** | Uniform, lacks specialization.                   | Specific focus on source and target nodes by certain heads. |
-| **Context Understanding**  | Limited differentiation of relationships.         | Diverse relationships captured by different heads.     |
-| **Path Generation**        | Struggles with accuracy due to lack of focus.    | Smoother and more accurate token progression.         |
-| **Hallucinations**         | Occasional hallucination of nonexistent edges.   | Same issue observed but less frequent.               |
-| **Error Rate**             | Higher error percentage due to uniform attention.| Lower error percentage due to head specialization.    |
+While the experiment demonstrates the strengths of Transformers in graph-based path-finding tasks, several challenges persist:
+
+### Hallucinations
+
+- Both single and multi-head configurations occasionally generate edges that do not exist in the graph, resulting in invalid paths.
+
+### Unreachable Paths
+
+- Certain paths remain unreachable, particularly in complex graph topologies, due to incomplete or erroneous attention assignments.
+
+### Testing Limitations
+
+- The experiment focuses on a limited set of Directed Acyclic Graph (DAG) topologies. Testing on a broader and more diverse set of DAGs is essential to assess the model's generalizability.
 
 ---
 
 ## Conclusion
 
-The experiment demonstrates that introducing multiple attention heads enhances the model's ability to handle both short and long-range relationships in graph-based path-finding tasks. Key findings include:
-- **Strengths**:
-  - Multiple attention heads allow for specialization, smoother attention transitions, and improved accuracy.
-  - Both configurations exhibit smooth attention distributions, aiding in coherent path generation.
-- **Weaknesses**:
-  - Challenges such as hallucinations of nonexistent edges and unreachable paths remain unresolved.
-  - Testing on additional and more complex DAG topologies is necessary for robust evaluation.
+This analysis underscores the advantages of multiple attention heads and layers in Transformer models for planning and path-finding tasks. Their ability to specialize allows for improved handling of both local and global context, resulting in higher accuracy and robustness.
 
-These findings align with the principles outlined in the ALPINE study, showcasing the potential and limitations of Transformers in planning through autoregressive learning.
+### Key Takeaways
+
+- **Strengths**:
+  - Multiple attention heads enable smoother attention transitions and greater accuracy.
+  - Layer specialization ensures better integration of critical information.
+
+- **Weaknesses**:
+  - Challenges such as hallucinations and unreachable paths remain unresolved.
+  - Broader testing with more complex graph topologies is necessary for comprehensive evaluation.
