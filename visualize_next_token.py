@@ -2,7 +2,7 @@ import argparse
 import matplotlib.pyplot as plt
 import torch
 import tiktoken
-
+import os
 from utils_final import (
     GPTModel,
     generate_and_print_sample,
@@ -38,8 +38,8 @@ def main():
     parser.add_argument(
         "--save_path",
         type=str,
-        default="next_token_probabilities.png",
-        help="Path to save the next token probability plot. Default is 'next_token_probabilities.png'.",
+        default="img/next_token_probabilities",
+        help="Base path to save the next token probability plot. The actual file name will include head and layer information. Default is 'img/next_token_probabilities'.",
     )
     parser.add_argument(
         "--device",
@@ -73,6 +73,16 @@ def main():
     # Load the model configuration
     GPT_CONFIG = load_config(args.config_file)
 
+    # Extract head and layer information from the configuration
+    num_heads = GPT_CONFIG.get("n_heads", "unknown_heads")
+    num_layers = GPT_CONFIG.get("n_layers", "unknown_layers")
+
+    # Construct the save path with head and layer information
+    # Extract the base name of the config file (without extension) for saving the image
+    config_base_name = os.path.splitext(os.path.basename(args.config_file))[0]
+
+    save_path = f"img/{config_base_name}_next_token.png"
+
     # Initialize the model and load pre-trained weights
     model = GPTModel(GPT_CONFIG)
     model.load_state_dict(torch.load(args.model_file, map_location=device))
@@ -94,15 +104,15 @@ def main():
         plot_best_tokens_prob=True,
         print_output=True,
         proba_threshold=args.proba_threshold,
-        save_path=args.save_path,
+        save_path=save_path,
     )
 
     if args.verbose:
-        print(f"Next token prediction visualized and saved to {args.save_path}.")
+        print(f"Next token prediction visualized and saved to {save_path}.")
 
 
 if __name__ == "__main__":
     main()
 
 # Example run:
-# python visualize_next_token.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --save_path img/next_token_probabilities.png --verbose
+# python visualize_next_token.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --save_path img/next_token_probabilities --verbose

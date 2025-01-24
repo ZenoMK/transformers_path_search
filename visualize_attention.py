@@ -2,7 +2,7 @@ import argparse
 import matplotlib.pyplot as plt
 import tiktoken
 import torch
-
+import os
 from utils_final import (
     GPTModel,
     AttentionVisualizer,
@@ -48,12 +48,6 @@ def main():
         nargs="+",
         default=[0],
         help="List of transformer layers to visualize. Default is [0].",
-    )
-    parser.add_argument(
-        "--save_path",
-        type=str,
-        default="attention_weights.png",
-        help="Path to save the attention weights plot. Default is 'attention_weights.png'.",
     )
     parser.add_argument(
         "--device",
@@ -103,13 +97,20 @@ def main():
         print(f"Model and tokenizer loaded successfully.")
         print(f"Input text: {args.input_text}")
 
+    # Extract the base name of the config file (without extension) for saving the image
+    config_base_name = os.path.splitext(os.path.basename(args.config_file))[0]
+    save_path = f"img/{config_base_name}_attention.png"
+
+    if args.verbose:
+        print(f"Attention visualization will be saved to: {save_path}")
+
     # Initialize the AttentionVisualizer
     visualizer = AttentionVisualizer(model, tokenizer)
     visualizer.infer_and_visualize_attention(
         input_text=args.input_text,
         heads=args.heads,
         layers=args.layers,
-        save_path=f"{args.save_path}_attention.png",
+        save_path=save_path,
         use_power_scale=args.use_power_scale,
         gamma=args.gamma,
     )
@@ -119,4 +120,4 @@ if __name__ == "__main__":
     main()
 
 # Example run:
-# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --heads 0 1 2 --layers 0 1 --save_path img/attention_weights.png --verbose
+# python visualize_attention.py --config_file config/gpt_config.json --model_file models/gpt_model.pth --input_text "19 94 19 27 34 46 58 65 67 82 87 94" --heads 0 1 2 --layers 0 1 --verbose

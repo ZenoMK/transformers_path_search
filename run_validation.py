@@ -68,8 +68,9 @@ def validate_paths(val_paths, model, tokenizer, device, DAG, verbose=False):
         dict: A dictionary with counts of validation results.
     """
     counts = {"ok": 0, "not_ok": 0, "hallucination": 0, "not_reachable": 0}
-    line_count = 0
+    line_count = -1
     for path_line in val_paths.strip().split("\n"):
+        line_count += 1
         # show line count for verbose mode
         if verbose:
             print(f"\n🔢 Line {line_count + 1}")
@@ -156,7 +157,6 @@ def validate_paths(val_paths, model, tokenizer, device, DAG, verbose=False):
             if verbose:
                 print(f"✅ Emission Path Validated Successfully.")
             counts["ok"] += 1
-        line_count += 1
 
     # Calculate error percentage
     error_percentage = 100 * counts["not_ok"] / max(counts["ok"], 1)
