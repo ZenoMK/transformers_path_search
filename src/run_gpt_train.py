@@ -3,6 +3,7 @@ import json
 import matplotlib.pyplot as plt
 import networkx as nx
 import tiktoken
+import pprint
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -26,6 +27,9 @@ def load_config(config_file):
     """
     with open(config_file, "r") as f:
         config = json.load(f)
+    # Show console info
+    pprint.pprint(config)
+
     return config
 
 
@@ -99,6 +103,10 @@ def train_and_save_model(
     # Initialize the GPT model and move it to the specified device
     model = GPTModel(GPT_CONFIG)
     model.to(device)
+
+    # Count parameters
+    total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total number of parameters in the model: {total_trainable_params}")
 
     # Set up the optimizer
     optimizer = torch.optim.AdamW(

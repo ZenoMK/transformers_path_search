@@ -13,7 +13,11 @@ from torch.nn import (
     Embedding,
     Sequential,
 )
+from scale_dot_product_gpa import scaled_dot_product_gqa
+
 import matplotlib.pyplot as plt
+import torch
+import matplotlib.colors as mcolors
 
 
 def create_dataloader_v1(
@@ -57,14 +61,26 @@ class GPTModel(Module):
 class TransformerBlock(Module):
     def __init__(self, cfg):
         super().__init__()
-        self.att = MultiHeadAttention(
-            d_in=cfg["emb_dim"],
-            d_out=cfg["emb_dim"],
-            context_length=cfg["context_length"],
-            num_heads=cfg["n_heads"],
-            dropout=cfg["drop_rate"],
-            qkv_bias=cfg["qkv_bias"],
-        )
+
+        if cfg["attention_type"] == "MHA" or cfg["attention_type"] == "":
+            self.att = MultiHeadAttention(
+                d_in=cfg["emb_dim"],
+                d_out=cfg["emb_dim"],
+                context_length=cfg["context_length"],
+                num_heads=cfg["n_heads"],
+                dropout=cfg["drop_rate"],
+                qkv_bias=cfg["qkv_bias"],
+            )
+        elif cfg["attention_type"] == "MHGQA":
+            self.att = MultiheadGQA(d_in=cfg["emb_dim"],
+                d_out=cfg["emb_dim"],
+                context_length=cfg["context_length"],
+                num_heads=cfg["n_heads"],
+                dropout=cfg["drop_rate"],
+                qkv_bias=cfg["qkv_bias"],
+                kv_heads=cfg["kv_heads"])
+        
+        
         self.ff = FeedForward(cfg)
         self.norm1 = LayerNorm(cfg["emb_dim"])
         self.norm2 = LayerNorm(cfg["emb_dim"])
@@ -157,6 +173,7 @@ class GPTDatasetV1(Dataset):
         return self.inputs_ids[idx], self.targets_ids[idx]
 
 
+
 class MultiHeadAttention(Module):
     def __init__(self, d_in, d_out, context_length, dropout, num_heads, qkv_bias=False):
         super().__init__()
@@ -201,19 +218,105 @@ class MultiHeadAttention(Module):
         return context_vec
 
 
-import matplotlib.pyplot as plt
-import torch
-import matplotlib.colors as mcolors
 
+from einops import rearrange, einsum
 
-import matplotlib.pyplot as plt
-import torch
-import matplotlib.colors as mcolors
+class MultiheadGQA(Module):
+    """
+    A drop-in replacement for the old `MultiHeadAttention` class, but uses
+    Grouped-Query Attention (GQA) internally. It has the same constructor signature
+    and forward usage (`forward(x)`) as the original code, so it can be used
+    similarly in your model, yet relies on the GQA mechanism under the hood.
+    """
 
+    def __init__(
+        self,
+        d_in: int,
+        d_out: int,
+        context_length: int,
+        dropout: float,
+        num_heads: int,
+        kv_heads: int,
+        qkv_bias: bool = False,
+    ):
+        super().__init__()
+        assert d_out % num_heads == 0, "d_out must be divisible by num_heads"
+        self.d_in = d_in
+        self.d_out = d_out
+        self.num_heads = num_heads
+        # For GQA, we choose fewer key/value heads; e.g. 1 => multi-query
+        # or some factor < num_heads for generalized GQA.
+        # Here, we pick 1 by default for demonstration (MQA style).
+        self.kv_heads = kv_heads
 
-import matplotlib.pyplot as plt
-import torch
-import matplotlib.colors as mcolors
+        self.head_dim = d_out // num_heads
+        kv_embed_dim = self.head_dim * self.kv_heads
+
+        # Query projects to (d_out)
+        self.W_query = Linear(d_in, d_out, bias=qkv_bias)
+        # Key, Value project to a reduced dimension => fewer kv heads
+        self.W_key   = Linear(d_in, kv_embed_dim, bias=qkv_bias)
+        self.W_value = Linear(d_in, kv_embed_dim, bias=qkv_bias)
+
+        # Final projection back to d_out
+        self.out_proj = Linear(d_out, d_out, bias=qkv_bias)
+
+        # We'll store the (upper-triangular) causal mask for a sequence of `context_length`.
+        # The original code uses an upper-tri mask and then in forward() calls masked_fill_().
+        # 1's in the upper-tri => masked out, so only the lower tri (past) is allowed.
+        self.register_buffer(
+            "mask", torch.triu(torch.ones(context_length, context_length), diagonal=1)
+        )
+
+        # We'll store dropout probability (the GQA function expects a float).
+        self.dropout_p = dropout
+
+        # (Optional) store attn weights & context for visualization
+        self.atten_weights = None
+        self.context_vector = None
+
+    def forward(self, x):
+        """
+        Args:
+            x: (batch, seq_len, d_in)
+
+        Returns:
+            Tensor of shape (batch, seq_len, d_out)
+        """
+        b, n, _ = x.shape
+
+        # 1) Project input to Q/K/V
+        q = self.W_query(x)   # (b, n, d_out)
+        k = self.W_key(x)     # (b, n, kv_embed_dim)
+        v = self.W_value(x)   # (b, n, kv_embed_dim)
+
+        # 2) Reshape:
+        #    Q -> (b, n, num_heads, head_dim)
+        #    K,V -> (b, n, kv_heads, head_dim)
+        q = rearrange(q, "b n (h d) -> b n h d", h=self.num_heads)
+        k = rearrange(k, "b n (h d) -> b n h d", h=self.kv_heads)
+        v = rearrange(v, "b n (h d) -> b n h d", h=self.kv_heads)
+
+        # 4) Call the GQA attention function
+        out, attn_weights = scaled_dot_product_gqa(
+            query=q,
+            key=k,
+            value=v,
+            dropout=self.dropout_p,
+            is_causal=True,      # we already passed an explicit mask
+            need_weights=True,   # so we can store them
+            average_attn_weights=False,
+            force_grouped=True,  # ensure the grouped path is used
+        )
+
+        out = out.transpose(1, 2)  # Now out is (b, n, num_heads, head_dim)
+        context_vec = out.contiguous().view(b, n, self.d_out)
+
+        # 7) Final linear projection.
+        context_vec = self.out_proj(context_vec)
+        self.atten_weights = attn_weights.permute(0, 3, 1, 2)
+        self.context_vector = context_vec
+        return context_vec
 
 
 class AttentionVisualizer:

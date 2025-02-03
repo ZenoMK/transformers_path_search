@@ -114,6 +114,7 @@ def main():
         use_power_scale=args.use_power_scale,
         gamma=args.gamma,
     )
+    a = 1 + 1
 
 
 if __name__ == "__main__":
