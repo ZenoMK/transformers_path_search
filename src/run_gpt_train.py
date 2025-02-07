@@ -135,7 +135,7 @@ def train_and_save_model(
     config_name = config_file.split("/")[-1].replace(".json", "")
 
     # Save the trained model to disk, including the config name in the filename
-    model_save_path = f"models/{config_name}.pth"
+    model_save_path = f"../models/{config_name}.pth"
     torch.save(model.state_dict(), model_save_path)
 
     if verbose:

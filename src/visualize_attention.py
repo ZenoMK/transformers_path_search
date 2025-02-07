@@ -99,7 +99,7 @@ def main():
 
     # Extract the base name of the config file (without extension) for saving the image
     config_base_name = os.path.splitext(os.path.basename(args.config_file))[0]
-    save_path = f"img/{config_base_name}_attention.png"
+    save_path = f"../img/{config_base_name}_attention.png"
 
     if args.verbose:
         print(f"Attention visualization will be saved to: {save_path}")

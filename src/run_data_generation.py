@@ -169,19 +169,19 @@ def main():
     parser.add_argument(
         "--train_file",
         type=str,
-        default="data/train_reasoning.txt",
+        default="../data/train_reasoning.txt",
         help="Output file for training paths.",
     )
     parser.add_argument(
         "--val_file",
         type=str,
-        default="data/val_reasoning.txt",
+        default="../data/val_reasoning.txt",
         help="Output file for validation paths.",
     )
     parser.add_argument(
         "--dag_file",
         type=str,
-        default="data/DAG.gpickle",
+        default="../data/DAG.gpickle",
         help="Output file for the DAG.",
     )
     parser.add_argument(

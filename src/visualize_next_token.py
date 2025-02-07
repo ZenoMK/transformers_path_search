@@ -38,7 +38,7 @@ def main():
     parser.add_argument(
         "--save_path",
         type=str,
-        default="img/next_token_probabilities",
+        default="../img/next_token_probabilities",
         help="Base path to save the next token probability plot. The actual file name will include head and layer information. Default is 'img/next_token_probabilities'.",
     )
     parser.add_argument(
@@ -81,7 +81,7 @@ def main():
     # Extract the base name of the config file (without extension) for saving the image
     config_base_name = os.path.splitext(os.path.basename(args.config_file))[0]
 
-    save_path = f"img/{config_base_name}_next_token.png"
+    save_path = f"../img/{config_base_name}_next_token.png"
 
     # Initialize the model and load pre-trained weights
     model = GPTModel(GPT_CONFIG)
