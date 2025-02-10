@@ -102,7 +102,7 @@ def generate_and_save_dag(args):
                         if len(formatted_path) > max_length:
                             max_length = len(formatted_path)
                         paths.append(formatted_path)
-                        print(formatted_path)
+                        #print(formatted_path)
 
     # Shuffle the paths to randomize the order
     random.shuffle(paths)
