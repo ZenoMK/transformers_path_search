@@ -363,6 +363,7 @@ class AttentionVisualizer:
         # Decode tokens for labels
         labels = [self.tokenizer.decode([_token]) for _token in encoded_input]
         print("Labels:", labels)
+        print(f"the number of heads is {len(heads)}")
         # In the plot, set labels size on axis x , y and title, to 0.5
         plt.rc("xtick", labelsize=4)
         plt.rc("ytick", labelsize=4)

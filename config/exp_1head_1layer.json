@@ -9,5 +9,5 @@
     "batch_size": 10,
     "learning_rate": 0.0004,
     "weight_decay": 0.1,
-    "attention_type": "MHA"
+    "attention_type": ""
 }
