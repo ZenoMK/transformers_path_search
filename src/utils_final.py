@@ -388,12 +388,12 @@ class AttentionVisualizer:
             for j, head in enumerate(heads):
                 # Extract attention weights
                 attention_weights = self.model.trf_blocks[layer].att.atten_weights
-                attention_matrix = attention_weights[0,:head].detach().numpy()
+                attention_matrix = attention_weights[0][head].detach().numpy()
 
                 # Plot attention weights for the specified head
                 ax = axes[i][j]
                 self._plot_attention(
-                    ax, attention_matrix[0], labels, head, layer, use_power_scale, gamma
+                    ax, attention_matrix, labels, head, layer, use_power_scale, gamma
                 )
 
         plt.tight_layout()
