@@ -424,7 +424,7 @@ class AttentionVisualizer:
             gamma (float): Gamma value for power normalization.
         """
         # Select colormap and normalization
-        cmap = "viridis"
+        cmap = "Blues"
         norm = (
             mcolors.PowerNorm(gamma=gamma, vmin=0, vmax=1)
             if use_power_scale
